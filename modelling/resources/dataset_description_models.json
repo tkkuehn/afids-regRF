@@ -1,0 +1,22 @@
+{
+  "Name": "Model results",
+  "BIDSVersion": "1.4.0",
+  "PipelineDescription": {
+        "Name": "models",
+        "Version": "1.0.0"
+        },
+  "DatasetType": "derivative",
+  "GeneratedBy": [
+    {
+      "Name": "Manual",
+      "Description": "Placed each point within 3D Slicer"
+    }
+  ],
+  "SourceDatasets": [
+    {
+      "DOI": "",
+      "URL": "",
+      "Version": ""
+    }
+  ]
+}

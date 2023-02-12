@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+dependencies:
+  - nibabel>=3.1.0
+  - scikit-learn>=0.22.2
+  - nilearn>=0.6.2
+  - pandas>=1.0.3
