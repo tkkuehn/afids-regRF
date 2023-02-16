@@ -71,6 +71,43 @@ def integral_volume(resampled_image: NDArray) -> NDArray:
     return iv_zeropad
 
 
+def sample_coord_region(
+    coord: NDArray, sampling_rate: int, multiplier: int = 1
+) -> list[tuple[float, float, float]]:
+    """Generate a list of voxels in the neighbourhood of a coordinate.
+
+    Parameters
+    ----------
+    coord: NDArray
+        Centre coordinate.
+    sampling_rate: int
+        "Radius" of the neighbourhood.
+    multiplier: int
+        Multiplier of neighbourhood's size (as defined by sampling_rate)
+    """
+    return list(
+        it.product(
+            *[
+                range(
+                    coord[0] - (sampling_rate * multiplier),
+                    coord[0] + (sampling_rate * multiplier + 1),
+                    multiplier,
+                ),
+                range(
+                    coord[1] - sampling_rate * multiplier,
+                    coord[1] + (sampling_rate * multiplier + 1),
+                    multiplier,
+                ),
+                range(
+                    coord[2] - sampling_rate,
+                    coord[2] + (sampling_rate * multiplier + 1),
+                    multiplier,
+                ),
+            ]
+        )
+    )
+
+
 def gen_features(
     img_path: PathLike | str,
     fcsv_path: PathLike | str,
@@ -78,7 +115,6 @@ def gen_features(
     fiducial_num: int,
 ) -> list[NDArray]:
     """Generate features for one image and fiducial."""
-    # Load image -- assumes correct bids spec
     aff, img = read_nii_metadata(img_path)
 
     # Get and compute new fiducial location
@@ -86,34 +122,14 @@ def gen_features(
     resampled_fid = fid_world2voxel(fid_world, aff, resample_size=SIZE, padding=PADDING)
 
     # Get image samples (sample more closer to target)
-    inner_its = [
-        range(resampled_fid[0] - SAMPLING_RATE, resampled_fid[0] + (SAMPLING_RATE + 1)),
-        range(resampled_fid[1] - SAMPLING_RATE, resampled_fid[1] + (SAMPLING_RATE + 1)),
-        range(resampled_fid[2] - SAMPLING_RATE, resampled_fid[2] + (SAMPLING_RATE + 1)),
-    ]
-    inner_samples = list(it.product(*inner_its))
-
-    outer_its = [
-        range(
-            resampled_fid[0] - SAMPLING_RATE * 2,
-            resampled_fid[0] + SAMPLING_RATE * 2 + 1,
-            2,
-        ),
-        range(
-            resampled_fid[1] - SAMPLING_RATE * 2,
-            resampled_fid[1] + SAMPLING_RATE * 2 + 1,
-            2,
-        ),
-        range(
-            resampled_fid[2] - SAMPLING_RATE * 2,
-            resampled_fid[2] + SAMPLING_RATE * 2 + 1,
-            2,
-        ),
-    ]
-    outer_samples = list(it.product(*outer_its))
-
     # Concatenate and retain unique samples and
-    all_samples = np.unique(np.array(inner_samples + outer_samples), axis=0)
+    all_samples = np.unique(
+        np.array(
+            sample_coord_region(resampled_fid, SAMPLING_RATE)
+            + sample_coord_region(resampled_fid, SAMPLING_RATE, multiplier=2)
+        ),
+        axis=0,
+    )
 
     # Compute Haar-like features features
     # Make this optional to load or create
