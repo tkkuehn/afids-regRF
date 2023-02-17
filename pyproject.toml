@@ -20,6 +20,12 @@ flake8 = "^6.0.0"
 isort = "^5.12.0"
 pyright = "^1.1.294"
 
+[tool.poetry.group.jupyter]
+optional = true
+
+[tool.poetry.group.jupyter.dependencies]
+jupyter = "^1.0.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
