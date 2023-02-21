@@ -277,7 +277,7 @@ def train_afid_model(
 
     print("training start")
     mdl = regr_rf.fit(x_train, y_train)
-    dump(mdl, f"{afid_num}_{SAMPLING_RATE}x{SAMPLING_RATE}x{SAMPLING_RATE}.joblib")
+    dump(mdl, f"afid-{afid_num}_desc-rf_sampleRate-iso{SAMPLING_RATE}mm_model.joblib")
     print("training ended")
 
 
