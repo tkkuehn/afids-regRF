@@ -194,8 +194,9 @@ def gen_features(
     feature_offset_corners: tuple[NDArray, NDArray],
     padding: int,
     sampling_rate: int,
-    size: int
-) -> list[NDArray]:
+    size: int,
+    predict: bool = False
+) -> list[NDArray] | tuple[NDArray, NDArray, NDArray]:
     """Generate features for one image and fiducial."""
     aff, img = read_nii_metadata(img_path)
 
@@ -234,8 +235,44 @@ def gen_features(
     diff = box_averages[first_half_indices] - box_averages[second_half_indices]
     diff = np.reshape(diff, (all_samples.shape[0], 2000))
 
-    # The position of each sample relative to the fiducial.
-    dist = np.linalg.norm(all_samples - resampled_fid[0:3], axis=1)
-    prob = np.exp(-0.5 * dist)  # weighted more towards closer distances
+    # If features for training
+    if not predict:
+        # The position of each sample relative to the fiducial.
+        dist = np.linalg.norm(all_samples - resampled_fid[0:3], axis=1)
+        prob = np.exp(-0.5 * dist)  # weighted more towards closer distances
 
-    return [np.hstack((diff[index], prob[index])) for index in range(prob.shape[0])]
+        return [np.hstack((diff[index], prob[index])) for index in range(prob.shape[0])]
+    # Features for prediction
+    else:
+        return aff, diff, all_samples
+
+
+def afids_to_fcsv(
+    afid_coords: NDArray, 
+    fcsv_template: str, 
+    fcsv_output: PathLike | str
+):
+    """AFIDS to Slicer-compatible .fcsv file"""
+    # Read in fcsv template
+    with open(fcsv_template, "r") as f:
+        fcsv = [line.strip() for line in f]
+
+    # Loop over fiducials
+    for fid in range(1, 33):
+        # Update fcsv, skipping header
+        line_idx, fid_idx = fid + 2, fid - 1
+        
+        fcsv[line_idx] = fcsv[line_idx].replace(
+            f"afid{fid}_x", str(afid_coords[fid_idx][0])
+        )
+        fcsv[line_idx] = fcsv[line_idx].replace(
+            f"afid{fid}_y", str(afid_coords[fid_idx][1])
+        )
+        fcsv[line_idx] = fcsv[line_idx].replace(
+            f"afid{fid}_z", str(afid_coords[fid_idx][2])
+        )
+
+    # Write output fcsv
+    with open(fcsv_output, "w") as f:
+        f.write("\n".join(line for line in fcsv))
+

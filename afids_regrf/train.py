@@ -47,6 +47,7 @@ def train_afid_model(
     x_train = finalpredarr[:, :-1]
     y_train = finalpredarr[:, -1]
 
+    # NOTE: Should dump the model into appropriate location
     print("training start")
     mdl = regr_rf.fit(x_train, y_train)
     dump(mdl, f"afid-{afid_num}_desc-rf_sampleRate-iso{sampling_rate}mm_model.joblib")
