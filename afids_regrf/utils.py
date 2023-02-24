@@ -4,7 +4,7 @@ from __future__ import annotations
 import itertools as it
 from collections.abc import Sequence 
 from os import PathLike
-from typing import Optional
+from typing import NoReturn, Optional
 
 import nibabel as nib
 import numpy as np
@@ -253,7 +253,7 @@ def afids_to_fcsv(
     afid_coords: NDArray, 
     fcsv_template: str, 
     fcsv_output: PathLike | str
-):
+) -> NoReturn:
     """AFIDS to Slicer-compatible .fcsv file"""
     # Read in fcsv template
     with open(fcsv_template, "r") as f:

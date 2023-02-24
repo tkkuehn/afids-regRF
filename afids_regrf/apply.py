@@ -4,6 +4,7 @@ from __future__ import annotations
 import itertools as it
 from collections.abc import Iterable, Sequence
 from os import PathLike
+from typing import NoReturn
 
 import numpy as np
 import pandas as pd
@@ -62,7 +63,7 @@ def apply_all_afid_models(
     padding: int = 0,
     size: int = 1,
     sampling_rate: int = 5,
-):
+) -> NoReturn:
     """Apply a trained regRF fiducial for each of the 32 AFIDs."""
     all_afids_coords = np.empty((3, ), dtype=float) 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 import itertools as it
 from collections.abc import Iterable, Sequence
 from os import PathLike
+from typing import NoReturn
 
 import numpy as np
 from joblib import dump
@@ -20,7 +21,7 @@ def train_afid_model(
     padding: int,
     sampling_rate: int,
     size: int
-):
+) -> NoReturn:
     """Train a regRF model for a fiducial."""
     finalpred = np.asarray(
         it.chain.from_iterable(
@@ -64,7 +65,7 @@ def train_all_afid_models(
     padding: int = 0,
     size: int = 1,
     sampling_rate: int = 5,
-):
+) -> NoReturn:
     """Train a regRF fiducial for each of the 32 AFIDs."""
     feature_offsets = np.load(feature_offsets_path)
     for afid_num in range(1, 33):
