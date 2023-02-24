@@ -1,11 +1,13 @@
 """General purpose methods."""
+from __future__ import annotations 
+
 import itertools as it
 from collections.abc import Sequence 
 from os import PathLike
 from typing import Optional
 
 import nibabel as nib
-from numpy import np
+import numpy as np
 import pandas as pd 
 from numpy.typing import NDArray
 
