@@ -39,7 +39,7 @@ def apply_afid_model(
     # NOTE: Load from appropriate location
     # Load trained model and predict distances of coordinates
     regr_rf = load(
-        f"afid-{afid_num.zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
+        f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
         )
     dist_predict = regr_rf.predict(diff)
 
@@ -49,7 +49,7 @@ def apply_afid_model(
     idx = dist_df[0].idxmax()
 
     # Reverse look up to determine voxel with lowest distances
-    print(f'Voxel coordinates with greatest liklihood of being AFID #{afid_num} are: {samples[idx]}')
+    print(f'Voxel coordinates with greatest likelihood of being AFID #{afid_num} are: {samples[idx]}')
 
     afid_coords = aff[:3, :3].dot(samples[idx]) + aff[:3, 3]
 
