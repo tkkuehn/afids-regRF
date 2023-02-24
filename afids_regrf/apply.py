@@ -37,7 +37,9 @@ def apply_afid_model(
 
     # NOTE: Load from appropriate location
     # Load trained model and predict distances of coordinates
-    regr_rf = load(f"afid-{afid_num}_desc-rf_sampleRate-iso{sampling_rate}mm_model.joblib")
+    regr_rf = load(
+        f"afid-{afid_num.zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
+        )
     dist_predict = regr_rf.predict(diff)
 
     # Extract smallest Euclidean distance from predictions

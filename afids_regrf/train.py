@@ -50,7 +50,10 @@ def train_afid_model(
     # NOTE: Should dump the model into appropriate location
     print("training start")
     mdl = regr_rf.fit(x_train, y_train)
-    dump(mdl, f"afid-{afid_num}_desc-rf_sampleRate-iso{sampling_rate}mm_model.joblib")
+    dump(
+        mdl, 
+        f"afid-{afid_num.zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
+    )
     print("training ended")
 
 
