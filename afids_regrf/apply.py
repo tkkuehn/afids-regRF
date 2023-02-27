@@ -26,7 +26,7 @@ def apply_afid_model(
     aff, diff, samples = it.chain.from_iterable(
         gen_features(
             subject_path,
-            get_fid(fcsv_path, afid_num- -1),
+            get_fid(fcsv_path, afid_num - 1),
             feature_offsets,
             padding,
             sampling_rate,
