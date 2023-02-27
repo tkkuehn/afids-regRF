@@ -4,7 +4,8 @@ from __future__ import annotations
 import itertools as it
 from collections.abc import Sequence 
 from os import PathLike
-from typing import NoReturn, Optional
+from typing import overload, NoReturn, Optional
+from typing_extensions import Literal
 
 import nibabel as nib
 import numpy as np
@@ -190,6 +191,32 @@ def gen_feature_boxes(
     return np.hstack((min_corner_list, max_corner_list))
 
 
+@overload
+def gen_features(
+    img_path: ...,
+    fiducial: ...,
+    feature_offset_corners: ...,
+    padding: ...,
+    sampling_rate: ...,
+    size: ...,
+    predict: Literal[False] = ...,
+) -> list[NDArray]:
+    ...
+
+
+@overload
+def gen_features(
+    img_path: ...,
+    fiducial: ...,
+    feature_offset_corners: ...,
+    padding: ...,
+    sampling_rate: ...,
+    size: ...,
+    predict: Literal[True] = ...,
+) -> tuple[NDArray, NDArray, NDArray]:
+    ...
+
+
 def gen_features(
     img_path: PathLike | str,
     fiducial: NDArray,
@@ -198,7 +225,7 @@ def gen_features(
     sampling_rate: int,
     size: int,
     predict: bool = False
-) -> list[NDArray] | tuple[NDArray, NDArray, NDArray]:
+):
     """Generate features for one image and fiducial."""
     aff, img = read_nii_metadata(img_path)
 
