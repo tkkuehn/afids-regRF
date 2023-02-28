@@ -21,7 +21,7 @@ def train_afid_model(
     padding: int,
     sampling_rate: int,
     size: int
-) -> NoReturn:
+) -> RandomForestRegressor:
     """Train a regRF model for a fiducial."""
     finalpred = np.asarray(
         it.chain.from_iterable(
@@ -50,18 +50,17 @@ def train_afid_model(
 
     # NOTE: Should dump the model into appropriate location
     print("training start")
-    mdl = regr_rf.fit(x_train, y_train)
-    dump(
-        mdl, 
-        f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
-    )
+    model = regr_rf.fit(x_train, y_train)
     print("training ended")
+
+    return model
 
 
 def train_all_afid_models(
     subject_paths: Sequence[PathLike[str] | str],
     fcsv_paths: Sequence[PathLike[str] | str],
     feature_offsets_path: PathLike | str,
+    model_dir_path: PathLike | str,
     padding: int = 0,
     size: int = 1,
     sampling_rate: int = 5,
@@ -69,7 +68,7 @@ def train_all_afid_models(
     """Train a regRF fiducial for each of the 32 AFIDs."""
     feature_offsets = np.load(feature_offsets_path)
     for afid_num in range(1, 33):
-        train_afid_model(
+        model = train_afid_model(
             afid_num,
             subject_paths,
             fcsv_paths,
@@ -78,3 +77,7 @@ def train_all_afid_models(
             size,
             sampling_rate,
         )
+
+        # Save model
+        model_fname = f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
+        dump(str(Path(model_dir_path).join(model_fname)))

@@ -17,6 +17,7 @@ def apply_afid_model(
     afid_num: int,
     subject_paths: Iterable[PathLike[str] | str],
     fcsv_paths: Iterable[PathLike[str] | str],
+    model_dir_path: PathLike[str] | str,
     feature_offsets: tuple[NDArray, NDArray],
     padding: int,
     sampling_rate: int,
@@ -38,9 +39,8 @@ def apply_afid_model(
 
     # NOTE: Load from appropriate location
     # Load trained model and predict distances of coordinates
-    regr_rf = load(
-        f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
-        )
+    model_fname = f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
+    regr_rf = load(Path(model_dir_path).join(model_fname))
     dist_predict = regr_rf.predict(diff)
 
     # Extract smallest Euclidean distance from predictions
