@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Methods for applying trained regRF models."""
 from __future__ import annotations
 
