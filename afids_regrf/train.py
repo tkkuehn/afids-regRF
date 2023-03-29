@@ -53,7 +53,7 @@ def train_afid_model(
     y_train = finalpredarr[:, -1]
 
     # NOTE: Should dump the model into appropriate location
-    print("training start")
+    print(f"training start - afid-{str(afid_num).zfill(2)}")
     model = regr_rf.fit(x_train, y_train)
     print("training ended")
 
