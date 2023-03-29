@@ -98,7 +98,7 @@ def gen_parser() -> ArgumentParser:
         help=(
             "Path to subject nifti images. If more than 1 subject, pass paths "
             "as space-separated list."
-        )
+        ),
     )
     parser.add_argument(
         "--fcsv_paths",
@@ -110,11 +110,7 @@ def gen_parser() -> ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--feature_offsets_path",
-        type=str,
-        help=(
-            "Path to featuers_offsets.npz file"
-        )
+        "--feature_offsets_path", type=str, help=("Path to featuers_offsets.npz file")
     )
     parser.add_argument(
         "--model_dir_path",
@@ -146,7 +142,7 @@ def gen_parser() -> ArgumentParser:
         help=(
             "Number of voxels in both directions along each axis to sample as "
             "part of the training Default: 5"
-        )
+        ),
     )
 
     return parser
@@ -155,9 +151,6 @@ def gen_parser() -> ArgumentParser:
 def main():
     parser = gen_parser()
     args = parser.parse_args()
-
-    print(args.subject_paths)
-    print(args.fcsv_paths)
 
     train_all_afid_models(
         subject_paths=args.subject_paths,
