@@ -52,7 +52,7 @@ def train_afid_model(
     y_train = finalpredarr[:, -1]
 
     # NOTE: Should dump the model into appropriate location
-    print("training start")
+    print(f"training start - afid-{str(afid_num).zfill(2)}")
     model = regr_rf.fit(x_train, y_train)
     print("training ended")
 
@@ -110,7 +110,7 @@ def gen_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--feature_offsets_path",
-        nargs="1",
+        nargs="?",
         type=str,
         help=(
             "Path to featuers_offsets.npz file"
@@ -118,7 +118,7 @@ def gen_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--model_dir_path",
-        nargs=1,
+        nargs="?",
         type=str,
         help=(
             "Path to directory for saving fitted models."
@@ -150,7 +150,7 @@ def gen_parser() -> ArgumentParser:
         default=5,
         required=False,
         help=(
-            "Number of voxels in both directions along each axis to sample as 
+            "Number of voxels in both directions along each axis to sample as "
             "part of the training Default: 5"
         )
     )

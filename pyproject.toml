@@ -6,6 +6,10 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 packages = [{include = "afids_regrf"}]
 
+[tool.poetry.scripts]
+afids_regrf_train = "afids_regrf.train:main"
+afids_regrf_apply = "afids_regrf.apply:main"
+
 [tool.poetry.dependencies]
 python = ">3.8.1,<4"
 nibabel = "^5.0.1"

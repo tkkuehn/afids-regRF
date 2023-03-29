@@ -112,7 +112,7 @@ def gen_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--feature_offsets_path",
-        nargs="1",
+        nargs="?",
         type=str,
         help=(
             "Path to featuers_offsets.npz file"
@@ -120,7 +120,7 @@ def gen_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--model_dir_path",
-        nargs=1,
+        nargs="?",
         type=str,
         help=(
             "Path to directory for saving fitted models."
@@ -152,7 +152,7 @@ def gen_parser() -> ArgumentParser:
         default=5,
         required=False,
         help=(
-            "Number of voxels in both directions along each axis to sample as 
+            "Number of voxels in both directions along each axis to sample as "
             "part of the training Default: 5"
         )
     )
