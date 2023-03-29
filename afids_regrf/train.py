@@ -6,6 +6,7 @@ import itertools as it
 from argparse import ArgumentParser
 from collections.abc import Iterable, Sequence
 from os import PathLike
+from pathlib import Path
 from typing import NoReturn
 
 import numpy as np
@@ -82,7 +83,7 @@ def train_all_afid_models(
 
         # Save model
         model_fname = f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
-        dump(str(Path(model_dir_path).join(model_fname)))
+        dump(model, Path(model_dir_path) / model_fname)
 
 
 def gen_parser() -> ArgumentParser:
@@ -105,6 +106,14 @@ def gen_parser() -> ArgumentParser:
         help=(
             "Path to subject fcsv files. If more than 1 subject, pass paths as "
             "space-separated list."
+        )
+    )
+    parser.add_argument(
+        "--feature_offsets_path",
+        nargs="1",
+        type=str,
+        help=(
+            "Path to featuers_offsets.npz file"
         )
     )
     parser.add_argument(
@@ -141,8 +150,8 @@ def gen_parser() -> ArgumentParser:
         default=5,
         required=False,
         help=(
-            "Multiplier of a neighbourhood's size (e.g. sampling rate). "
-            "Default: 5"
+            "Number of voxels in both directions along each axis to sample as 
+            "part of the training Default: 5"
         )
     )
 
@@ -156,6 +165,7 @@ def main():
     train_all_afid_models(
         subject_paths=args.subject_paths,
         fcsv_paths=args.fcsv_paths,
+        feature_offsets_path=args.feature_offsets_path,
         model_dir_path=args.model_dir_path,
         padding=args.padding,
         size=args.size,

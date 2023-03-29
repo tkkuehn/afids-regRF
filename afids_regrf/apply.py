@@ -6,6 +6,7 @@ import itertools as it
 from argparse import ArgumentParser
 from collections.abc import Iterable, Sequence
 from os import PathLike
+from pathlib import Path
 from typing import NoReturn
 
 import numpy as np
@@ -42,7 +43,7 @@ def apply_afid_model(
     # NOTE: Load from appropriate location
     # Load trained model and predict distances of coordinates
     model_fname = f"afid-{str(afid_num).zfill(2)}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
-    regr_rf = load(Path(model_dir_path).join(model_fname))
+    regr_rf = load(Path(model_dir_path) / model_fname)
     dist_predict = regr_rf.predict(diff)
 
     # Extract smallest Euclidean distance from predictions
@@ -110,6 +111,14 @@ def gen_parser() -> ArgumentParser:
         )
     )
     parser.add_argument(
+        "--feature_offsets_path",
+        nargs="1",
+        type=str,
+        help=(
+            "Path to featuers_offsets.npz file"
+        )
+    )
+    parser.add_argument(
         "--model_dir_path",
         nargs=1,
         type=str,
@@ -143,8 +152,8 @@ def gen_parser() -> ArgumentParser:
         default=5,
         required=False,
         help=(
-            "Multiplier of a neighbourhood's size (e.g. sampling rate). "
-            "Default: 5"
+            "Number of voxels in both directions along each axis to sample as 
+            "part of the training Default: 5"
         )
     )
 
@@ -158,6 +167,7 @@ def main():
     apply_all_afid_models(
         subject_paths=args.subject_paths,
         fcsv_paths=args.fcsv_paths,
+        feature_offsets_path=args.feature_offsets_path,
         model_dir_path=args.model_dir_path,
         padding=args.padding,
         size=args.size,
