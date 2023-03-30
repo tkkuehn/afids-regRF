@@ -7,14 +7,14 @@ from argparse import ArgumentParser
 from collections.abc import Iterable, Sequence
 from os import PathLike
 from pathlib import Path
-from typing import NoReturn
 
 import numpy as np
 from joblib import dump
 from numpy.typing import NDArray
 from sklearn.ensemble import RandomForestRegressor
 
-from utils import get_fid, gen_features
+from utils import gen_features, get_fid
+
 
 def train_afid_model(
     afid_num: int,
@@ -23,24 +23,25 @@ def train_afid_model(
     feature_offsets: tuple[NDArray, NDArray],
     padding: int,
     sampling_rate: int,
-    size: int
+    size: int,
 ) -> RandomForestRegressor:
     """Train a regRF model for a fiducial."""
     finalpred = np.asarray(
-        it.chain.from_iterable(
-            gen_features(
-                subject_path, 
-                get_fid(fcsv_path, afid_num - 1), 
-                feature_offsets,
-                padding,
-                sampling_rate,
-                size,
+        list(
+            it.chain.from_iterable(
+                gen_features(
+                    subject_path,
+                    get_fid(fcsv_path, afid_num - 1),
+                    feature_offsets,
+                    padding,
+                    sampling_rate,
+                    size,
+                )
+                for subject_path, fcsv_path in zip(subject_paths, fcsv_paths)
             )
-            for subject_path, fcsv_path in zip(subject_paths, fcsv_paths)
         )
     )
-    print(finalpred.shape)
-    finalpredarr = np.concatenate((np.zeros((1, 2001))), finalpred)[1:, :]
+    finalpredarr = np.concatenate((np.zeros((1, 2001)), finalpred))[1:, :]
     regr_rf = RandomForestRegressor(
         n_estimators=20,
         max_features=0.33,
@@ -67,7 +68,7 @@ def train_all_afid_models(
     padding: int = 0,
     size: int = 1,
     sampling_rate: int = 5,
-) -> NoReturn:
+) -> None:
     """Train a regRF fiducial for each of the 32 AFIDs."""
     feature_offsets = np.load(feature_offsets_path)
     for afid_num in range(1, 33):
@@ -97,7 +98,7 @@ def gen_parser() -> ArgumentParser:
         help=(
             "Path to subject nifti images. If more than 1 subject, pass paths "
             "as space-separated list."
-        )    
+        ),
     )
     parser.add_argument(
         "--fcsv_paths",
@@ -106,23 +107,15 @@ def gen_parser() -> ArgumentParser:
         help=(
             "Path to subject fcsv files. If more than 1 subject, pass paths as "
             "space-separated list."
-        )
+        ),
     )
     parser.add_argument(
-        "--feature_offsets_path",
-        nargs="?",
-        type=str,
-        help=(
-            "Path to featuers_offsets.npz file"
-        )
+        "--feature_offsets_path", type=str, help=("Path to featuers_offsets.npz file")
     )
     parser.add_argument(
         "--model_dir_path",
-        nargs="?",
         type=str,
-        help=(
-            "Path to directory for saving fitted models."
-        )
+        help=("Path to directory for saving fitted models."),
     )
     parser.add_argument(
         "--padding",
@@ -130,10 +123,7 @@ def gen_parser() -> ArgumentParser:
         type=int,
         default=0,
         required=False,
-        help=(
-            "Number of voxels to add when zero-padding nifti images. "
-            "Default: 0"
-        )
+        help=("Number of voxels to add when zero-padding nifti images. " "Default: 0"),
     )
     parser.add_argument(
         "--size",
@@ -141,7 +131,7 @@ def gen_parser() -> ArgumentParser:
         type=int,
         default=1,
         required=False,
-        help=("Factor to resample nifti image by. Default: 1")
+        help=("Factor to resample nifti image by. Default: 1"),
     )
     parser.add_argument(
         "--sampling_rate",
@@ -152,7 +142,7 @@ def gen_parser() -> ArgumentParser:
         help=(
             "Number of voxels in both directions along each axis to sample as "
             "part of the training Default: 5"
-        )
+        ),
     )
 
     return parser
