@@ -312,7 +312,7 @@ def afids_to_fcsv(
         row["z"] = afid_coords[idx][2]
 
     # Write output fcsv
-    with open(fcsv_output, "w", encoding="utf-8", newline='') as out_fcsv_file:
+    with open(fcsv_output, "w", encoding="utf-8", newline="") as out_fcsv_file:
         for line in header:
             out_fcsv_file.write(line)
         writer = csv.DictWriter(out_fcsv_file, fieldnames=AFIDS_FIELDNAMES)
