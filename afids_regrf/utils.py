@@ -1,6 +1,7 @@
 """General purpose methods."""
 from __future__ import annotations
 
+import csv
 import itertools as it
 from collections.abc import Sequence
 from os import PathLike
@@ -11,6 +12,23 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 from typing_extensions import Literal
+
+AFIDS_FIELDNAMES = [
+    "id",
+    "x",
+    "y",
+    "z",
+    "ow",
+    "ox",
+    "oy",
+    "oz",
+    "vis",
+    "sel",
+    "lock",
+    "label",
+    "desc",
+    "associatedNodeID",
+]
 
 
 def read_nii_metadata(nii_path: PathLike | str) -> tuple[NDArray, NDArray]:
@@ -281,24 +299,22 @@ def afids_to_fcsv(
 ) -> None:
     """AFIDS to Slicer-compatible .fcsv file"""
     # Read in fcsv template
-    with open(fcsv_template, "r") as f:
-        fcsv = [line.strip() for line in f]
+    with open(fcsv_template, "r", encoding="utf-8", newline="") as fcsv_file:
+        header = [fcsv_file.readline() for _ in range(3)]
+        reader = csv.DictReader(fcsv_file, fieldnames=AFIDS_FIELDNAMES)
+        fcsv = list(reader)
 
     # Loop over fiducials
-    for fid in range(1, 33):
+    for idx, row in enumerate(fcsv):
         # Update fcsv, skipping header
-        line_idx, fid_idx = fid + 2, fid - 1
-
-        fcsv[line_idx] = fcsv[line_idx].replace(
-            f"afid{fid}_x", str(afid_coords[fid_idx][0])
-        )
-        fcsv[line_idx] = fcsv[line_idx].replace(
-            f"afid{fid}_y", str(afid_coords[fid_idx][1])
-        )
-        fcsv[line_idx] = fcsv[line_idx].replace(
-            f"afid{fid}_z", str(afid_coords[fid_idx][2])
-        )
+        row["x"] = afid_coords[idx][0]
+        row["y"] = afid_coords[idx][1]
+        row["z"] = afid_coords[idx][2]
 
     # Write output fcsv
-    with open(fcsv_output, "w") as f:
-        f.write("\n".join(line for line in fcsv))
+    with open(fcsv_output, "w", encoding="utf-8", newline='') as out_fcsv_file:
+        for line in header:
+            out_fcsv_file.write(line)
+        writer = csv.DictWriter(out_fcsv_file, fieldnames=AFIDS_FIELDNAMES)
+        for row in fcsv:
+            writer.writerow(row)

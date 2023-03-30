@@ -90,8 +90,8 @@ def apply_all_afid_models(
 
     for idx, out_path in enumerate(out_paths):
         afids_to_fcsv(
-            all_afids_coords[(idx * 32) + 1 : (idx * 32) + 33].astype(int),
-            "afids_regrf/modelling/resources/afids_template.fcsv",
+            all_afids_coords[(idx * 32) + 1 : (idx * 32) + 33],
+            "afids_regrf/modelling/resources/dummy.fcsv",
             out_path,
         )
 
