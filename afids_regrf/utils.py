@@ -167,7 +167,7 @@ def gen_box_averages(img: NDArray, corner_list: pd.DataFrame) -> pd.DataFrame:
     def img_idx(type_: Literal["min", "max"], coord: Literal["x", "y", "z"]) -> NDArray:
         idx = (slice(None), slice(None), type_)
 
-        return corner_list.loc[idx, coord].to_numpy(dtype=np.int_)
+        return corner_list.loc[idx, coord].to_numpy(dtype="uint32")
 
     # n x 1 array of the sum of the voxel values in each box
     # See Cui et al. Fig. 2
@@ -253,10 +253,10 @@ def gen_feature_boxes(
     for idx in range(all_samples.shape[0]):
         corner_list.loc[(idx, slice(None), "min"), :] = (
             all_samples.loc[idx, :] + lower_offsets
-        ).to_numpy(dtype=np.uint8)
+        ).to_numpy(dtype=np.uint32)
         corner_list.loc[(idx, slice(None), "max"), :] = (
             all_samples.loc[idx, :] + higher_offsets
-        ).to_numpy(dtype=np.uint8)
+        ).to_numpy(dtype=np.uint32)
     return corner_list
 
 
