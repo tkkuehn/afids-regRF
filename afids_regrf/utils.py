@@ -85,7 +85,7 @@ def integral_volume(resampled_image: NDArray) -> NDArray:
 
 def sample_coord_region(
     coord: NDArray, sampling_rate: int, multiplier: int = 1
-) -> list[tuple[float, float, float]]:
+) -> pd.DataFrame:
     """Generate a list of voxels in the neighbourhood of a coordinate.
 
     Parameters
@@ -97,26 +97,31 @@ def sample_coord_region(
     multiplier: int
         Multiplier of neighbourhood's size (as defined by sampling_rate)
     """
-    return list(
-        it.product(
-            *[
-                range(
-                    coord[0] - sampling_rate * multiplier,
-                    coord[0] + (sampling_rate * multiplier) + 1,
-                    multiplier,
-                ),
-                range(
-                    coord[1] - sampling_rate * multiplier,
-                    coord[1] + (sampling_rate * multiplier) + 1,
-                    multiplier,
-                ),
-                range(
-                    coord[2] - sampling_rate * multiplier,
-                    coord[2] + (sampling_rate * multiplier) + 1,
-                    multiplier,
-                ),
-            ]
-        )
+    return pd.DataFrame(
+        np.array(
+            list(
+                it.product(
+                    *[
+                        range(
+                            coord[0] - sampling_rate * multiplier,
+                            coord[0] + (sampling_rate * multiplier) + 1,
+                            multiplier,
+                        ),
+                        range(
+                            coord[1] - sampling_rate * multiplier,
+                            coord[1] + (sampling_rate * multiplier) + 1,
+                            multiplier,
+                        ),
+                        range(
+                            coord[2] - sampling_rate * multiplier,
+                            coord[2] + (sampling_rate * multiplier) + 1,
+                            multiplier,
+                        ),
+                    ]
+                )
+            )
+        ),
+        columns=["x", "y", "z"],
     )
 
 
@@ -146,7 +151,7 @@ def gen_offset_corners(
     return lower_corners, upper_corners
 
 
-def gen_box_averages(img: NDArray, corner_list: NDArray) -> NDArray:
+def gen_box_averages(img: NDArray, corner_list: pd.DataFrame) -> pd.DataFrame:
     """For every box defined by corner_list, compute the average voxel value.
 
     Parameters
@@ -159,33 +164,72 @@ def gen_box_averages(img: NDArray, corner_list: NDArray) -> NDArray:
     # compute the integral image for more efficient generation of haar-like features
     iv_image = integral_volume(img)
 
+    def img_idx(type_: Literal["min", "max"], coord: Literal["x", "y", "z"]) -> NDArray:
+        idx = (slice(None), slice(None), type_)
+
+        return corner_list.loc[idx, coord].to_numpy(dtype=np.int_)
+
     # n x 1 array of the sum of the voxel values in each box
     # See Cui et al. Fig. 2
     voxel_sums = (
-        iv_image[corner_list[:, 3] + 1, corner_list[:, 4] + 1, corner_list[:, 5] + 1]
-        - iv_image[corner_list[:, 0], corner_list[:, 4] + 1, corner_list[:, 5] + 1]
-        - iv_image[corner_list[:, 3] + 1, corner_list[:, 4] + 1, corner_list[:, 2]]
-        - iv_image[corner_list[:, 3] + 1, corner_list[:, 1], corner_list[:, 5] + 1]
-        - iv_image[corner_list[:, 0], corner_list[:, 1], corner_list[:, 2]]
-        + iv_image[corner_list[:, 3] + 1, corner_list[:, 1], corner_list[:, 2]]
-        + iv_image[corner_list[:, 0], corner_list[:, 1], corner_list[:, 5] + 1]
-        + iv_image[corner_list[:, 0], corner_list[:, 4] + 1, corner_list[:, 2]]
+        iv_image[
+            img_idx("max", "x") + 1,
+            img_idx("max", "y") + 1,
+            img_idx("max", "z") + 1,
+        ]
+        - iv_image[
+            img_idx("min", "x"),
+            img_idx("max", "y") + 1,
+            img_idx("max", "z") + 1,
+        ]
+        - iv_image[
+            img_idx("max", "x") + 1,
+            img_idx("max", "y") + 1,
+            img_idx("min", "z"),
+        ]
+        - iv_image[
+            img_idx("max", "x") + 1,
+            img_idx("min", "y"),
+            img_idx("max", "z") + 1,
+        ]
+        - iv_image[
+            img_idx("min", "x"),
+            img_idx("min", "y"),
+            img_idx("min", "z"),
+        ]
+        + iv_image[
+            img_idx("max", "x") + 1,
+            img_idx("min", "y"),
+            img_idx("min", "z"),
+        ]
+        + iv_image[
+            img_idx("min", "x"),
+            img_idx("min", "y"),
+            img_idx("max", "z") + 1,
+        ]
+        + iv_image[
+            img_idx("min", "x"),
+            img_idx("max", "y") + 1,
+            img_idx("min", "z"),
+        ]
     )
 
     # n x 1 array of the number of voxels in each box
     nums_box_voxel = (
-        (corner_list[:, 3] - corner_list[:, 0] + 1)
-        * (corner_list[:, 4] - corner_list[:, 1] + 1)
-        * (corner_list[:, 5] - corner_list[:, 2] + 1)
+        (img_idx("max", "x") - img_idx("min", "x") + 1)
+        * (img_idx("max", "y") - img_idx("min", "y") + 1)
+        * (img_idx("max", "z") - img_idx("min", "z") + 1)
     )
 
+    out_idx = corner_list.index.droplevel("corner").drop_duplicates()
+
     # n x 1 array of the average voxel value in each box
-    return voxel_sums / nums_box_voxel
+    return pd.DataFrame(voxel_sums / nums_box_voxel, index=out_idx, columns=["box_avg"])
 
 
 def gen_feature_boxes(
-    feature_offset_corners: tuple[NDArray, NDArray], all_samples: NDArray
-):
+    feature_offset_corners: tuple[NDArray, NDArray], all_samples: pd.DataFrame
+) -> pd.DataFrame:
     """Generate a set of boxes from which to compute Haar-like features.
 
     Parameters
@@ -195,19 +239,25 @@ def gen_feature_boxes(
     all_samples
         The sample points relative to which the boxes will be defined
     """
-    lower_offsets, higher_offsets = feature_offset_corners
+    lower_offsets, higher_offsets = [
+        pd.DataFrame(offsets, columns=["x", "y", "z"])
+        for offsets in feature_offset_corners
+    ]
 
-    # Generate 4000 bounding boxes near each feature
-    min_corner_list = np.zeros((4000 * all_samples.shape[0], 3)).astype("uint8")
-    max_corner_list = np.zeros((4000 * all_samples.shape[0], 3)).astype("uint8")
+    index = pd.MultiIndex.from_product(
+        [all_samples.index, lower_offsets.index, ["min", "max"]],
+        names=["sample", "offset", "corner"],
+    )
+    corner_list = pd.DataFrame(index=index, columns=["x", "y", "z"])
+
     for idx in range(all_samples.shape[0]):
-        min_corner_list[idx * 4000 : (idx + 1) * 4000] = (
-            all_samples[idx] + lower_offsets
-        )
-        max_corner_list[idx * 4000 : (idx + 1) * 4000] = (
-            all_samples[idx] + higher_offsets
-        )
-    return np.hstack((min_corner_list, max_corner_list))
+        corner_list.loc[(idx, slice(None), "min"), :] = (
+            all_samples.loc[idx, :] + lower_offsets
+        ).to_numpy(dtype=np.uint8)
+        corner_list.loc[(idx, slice(None), "max"), :] = (
+            all_samples.loc[idx, :] + higher_offsets
+        ).to_numpy(dtype=np.uint8)
+    return corner_list
 
 
 @overload
@@ -253,35 +303,34 @@ def gen_features(
 
     # Get image samples (sample more closer to target)
     # Concatenate and retain unique samples and
-    all_samples = np.unique(
-        np.array(
-            sample_coord_region(resampled_fid, sampling_rate)
-            + sample_coord_region(resampled_fid, sampling_rate, multiplier=2)
-        ),
-        axis=0,
+    all_samples = (
+        pd.concat(
+            [
+                sample_coord_region(resampled_fid, sampling_rate),
+                sample_coord_region(resampled_fid, sampling_rate, multiplier=2),
+            ]
+        )
+        .drop_duplicates(ignore_index=True)
+        .sort_values(by=["x", "y", "z"], ignore_index=True)  # Just to match old way
     )
 
     box_averages = gen_box_averages(
         img, gen_feature_boxes(feature_offset_corners, all_samples)
     )
 
-    # Generate the indices for the first and second halves of the boxes per sample
-    first_half_indices = np.zeros(2000 * all_samples.shape[0])
-    second_half_indices = np.zeros(2000 * all_samples.shape[0])
-    for index in range(all_samples.shape[0]):
-        first_half_indices[index * 2000 : (index + 1) * 2000] = range(
-            index * 4000, index * 4000 + 2000
-        )
-        second_half_indices[index * 2000 : (index + 1) * 2000] = range(
-            index * 4000 + 2000, (index + 1) * 4000
-        )
-    first_half_indices = first_half_indices.astype(int)
-    second_half_indices = second_half_indices.astype(int)
-
     # These are the Haar-like features, the difference in average intensity between
     # paired boxes
-    diff = box_averages[first_half_indices] - box_averages[second_half_indices]
-    diff = np.reshape(diff, (all_samples.shape[0], 2000))
+    diff = pd.DataFrame(
+        box_averages.loc[(slice(None), slice(0, 1999)), :].to_numpy(dtype=np.float_)
+        - box_averages.loc[(slice(None), slice(2000, 3999)), :].to_numpy(
+            dtype=np.float_
+        ),
+        index=pd.MultiIndex.from_product(
+            [range(all_samples.shape[0]), zip(range(0, 2000), range(2000, 4000))]
+        ),
+    )
+
+    diff = np.reshape(diff.to_numpy(dtype=np.float_), (all_samples.shape[0], 2000))
 
     # If features for training
     if not predict:
