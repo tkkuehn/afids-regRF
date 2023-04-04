@@ -68,8 +68,8 @@ def apply_all_afid_models(
     feature_offsets_path: PathLike | str,
     model_dir_path: PathLike | str,
     padding: int = 0,
-    size: int = 1,
     sampling_rate: int = 5,
+    size: int = 1,
 ) -> None:
     """Apply a trained regRF fiducial for each of the 32 AFIDs."""
     all_afids_coords = np.empty((3,), dtype=float)
@@ -171,8 +171,8 @@ def main():
         feature_offsets_path=args.feature_offsets_path,
         model_dir_path=args.model_dir_path,
         padding=args.padding,
-        size=args.size,
         sampling_rate=args.sampling_rate,
+        size=args.size,
     )
 
 
