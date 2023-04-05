@@ -66,8 +66,8 @@ def train_all_afid_models(
     feature_offsets_path: PathLike | str,
     model_dir_path: PathLike | str,
     padding: int = 0,
-    size: int = 1,
     sampling_rate: int = 5,
+    size: int = 1,
 ) -> None:
     """Train a regRF fiducial for each of the 32 AFIDs."""
     feature_offsets = np.load(feature_offsets_path)
@@ -78,8 +78,8 @@ def train_all_afid_models(
             fcsv_paths,
             (feature_offsets["arr_0"], feature_offsets["arr_1"]),
             padding,
-            size,
             sampling_rate,
+            size,
         )
 
         # Save model
@@ -158,8 +158,8 @@ def main():
         feature_offsets_path=args.feature_offsets_path,
         model_dir_path=args.model_dir_path,
         padding=args.padding,
-        size=args.size,
         sampling_rate=args.sampling_rate,
+        size=args.size,
     )
 
 

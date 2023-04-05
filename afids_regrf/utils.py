@@ -11,6 +11,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
+from scipy.ndimage import zoom
 from typing_extensions import Literal
 
 AFIDS_FIELDNAMES = [
@@ -300,6 +301,7 @@ def gen_features(
 
     # Get and compute new fiducial location
     resampled_fid = fid_world2voxel(fiducial, aff, resample_size=size, padding=padding)
+    img = zoom(img, size)
 
     # Get image samples (sample more closer to target)
     # Concatenate and retain unique samples and
@@ -340,7 +342,7 @@ def gen_features(
 
         return [np.hstack((diff[index], prob[index])) for index in range(prob.shape[0])]
     # Features for prediction
-    return aff, diff, all_samples
+    return aff, diff, all_samples.to_numpy(dtype=np.int_)
 
 
 def afids_to_fcsv(
