@@ -166,9 +166,7 @@ def gen_box_averages(img: NDArray, corner_list: pd.DataFrame) -> pd.DataFrame:
     iv_image = integral_volume(img)
 
     def img_idx(type_: Literal["min", "max"], coord: Literal["x", "y", "z"]) -> NDArray:
-        idx = (slice(None), slice(None), type_)
-
-        return corner_list.loc[idx, coord].to_numpy(dtype="uint32")
+        return corner_list.loc[:, f"{coord}{type_}"].to_numpy(dtype="uint32")
 
     # n x 1 array of the sum of the voxel values in each box
     # See Cui et al. Fig. 2
@@ -222,10 +220,10 @@ def gen_box_averages(img: NDArray, corner_list: pd.DataFrame) -> pd.DataFrame:
         * (img_idx("max", "z") - img_idx("min", "z") + 1)
     )
 
-    out_idx = corner_list.index.droplevel("corner").drop_duplicates()
-
     # n x 1 array of the average voxel value in each box
-    return pd.DataFrame(voxel_sums / nums_box_voxel, index=out_idx, columns=["box_avg"])
+    return pd.DataFrame(
+        voxel_sums / nums_box_voxel, index=corner_list.index, columns=["box_avg"]
+    )
 
 
 def gen_feature_boxes(
@@ -240,24 +238,31 @@ def gen_feature_boxes(
     all_samples
         The sample points relative to which the boxes will be defined
     """
-    lower_offsets, higher_offsets = [
-        pd.DataFrame(offsets, columns=["x", "y", "z"])
-        for offsets in feature_offset_corners
-    ]
+    lower_offsets, higher_offsets = feature_offset_corners
+    sample_arr = all_samples.to_numpy(dtype="uint32")
+    num_offsets = lower_offsets.shape[0]
+    num_samples = sample_arr.shape[0]
 
     index = pd.MultiIndex.from_product(
-        [all_samples.index, lower_offsets.index, ["min", "max"]],
-        names=["sample", "offset", "corner"],
+        [range(num_samples), range(num_offsets)],
+        names=["sample", "offset"],
     )
-    corner_list = pd.DataFrame(index=index, columns=["x", "y", "z"])
+    min_corner_list = np.zeros((num_samples * num_offsets, 3)).astype("uint32")
+    max_corner_list = np.zeros((num_samples * num_offsets, 3)).astype("uint32")
 
-    for idx in range(all_samples.shape[0]):
-        corner_list.loc[(idx, slice(None), "min"), :] = (
-            all_samples.loc[idx, :] + lower_offsets
-        ).to_numpy(dtype=np.uint32)
-        corner_list.loc[(idx, slice(None), "max"), :] = (
-            all_samples.loc[idx, :] + higher_offsets
-        ).to_numpy(dtype=np.uint32)
+    for idx in range(num_samples):
+        min_corner_list[idx * num_offsets : (idx + 1) * num_offsets] = (
+            sample_arr[idx] + lower_offsets
+        )
+        max_corner_list[idx * num_offsets : (idx + 1) * num_offsets] = (
+            sample_arr[idx] + higher_offsets
+        )
+
+    corner_list = pd.DataFrame(
+        np.hstack((min_corner_list, max_corner_list)),
+        index=index,
+        columns=["xmin", "ymin", "zmin", "xmax", "ymax", "zmax"],
+    )
     return corner_list
 
 
