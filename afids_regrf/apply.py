@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from importlib_resources import files
 from joblib import load
 from numpy.typing import NDArray
 
@@ -110,24 +111,19 @@ def gen_parser() -> ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--fcsv_paths",
-        nargs="+",
-        type=str,
-        help=(
-            "Path to subject fcsv files. If more than 1 subject, pass paths as "
-            "space-separated list."
-        ),
-    )
-    parser.add_argument(
-        "--feature_offsets_path", type=str, help=("Path to featuers_offsets.npz file")
-    )
-    parser.add_argument(
         "--model_dir_path",
         type=str,
-        help=("Path to directory for saving fitted models."),
+        help="Path to directory containing trained models.",
     )
     parser.add_argument(
         "--output_fcsv_paths", nargs="+", type=str, help="Path to output FCSVs."
+    )
+    parser.add_argument(
+        "--feature_offsets_path",
+        type=str,
+        help="Path to features_offsets.npz file",
+        required=False,
+        default=None,
     )
     parser.add_argument(
         "--padding",
@@ -135,7 +131,7 @@ def gen_parser() -> ArgumentParser:
         type=int,
         default=0,
         required=False,
-        help=("Number of voxels to add when zero-padding nifti images. " "Default: 0"),
+        help=("Number of voxels to add when zero-padding nifti images. Default: 0"),
     )
     parser.add_argument(
         "--size",
@@ -143,7 +139,7 @@ def gen_parser() -> ArgumentParser:
         type=int,
         default=1,
         required=False,
-        help=("Factor to resample nifti image by. Default: 1"),
+        help="Factor to resample nifti image by. Default: 1",
     )
     parser.add_argument(
         "--sampling_rate",
@@ -153,7 +149,7 @@ def gen_parser() -> ArgumentParser:
         required=False,
         help=(
             "Number of voxels in both directions along each axis to sample as "
-            "part of the training Default: 5"
+            "part of the training. Default: 5"
         ),
     )
 
@@ -166,9 +162,16 @@ def main():
 
     apply_all_afid_models(
         subject_paths=args.subject_paths,
-        fcsv_paths=args.fcsv_paths,
+        fcsv_paths=[
+            files("afids_regrf.resources").joinpath(
+                "tpl-MNI152NLin2009cAsym_res-01_desc-groundtruth_afids.fcsv"
+            )
+            for _ in args.subject_paths
+        ],
         out_paths=args.output_fcsv_paths,
-        feature_offsets_path=args.feature_offsets_path,
+        feature_offsets_path=args.feature_offsets_path
+        if args.feature_offsets_path is not None
+        else files("afids_regrf.resources").joinpath("feature_offsets.npz"),
         model_dir_path=args.model_dir_path,
         padding=args.padding,
         sampling_rate=args.sampling_rate,
