@@ -266,6 +266,20 @@ def gen_feature_boxes(
     return corner_list
 
 
+def is_in_array(
+    array_df: pd.DataFrame, array_shape: tuple[int, int, int]
+) -> pd.DataFrame:
+    """Filter an index dataframe for values within an array shape."""
+    return (
+        (array_df["x"] > 0)
+        & (array_df["x"] < array_shape[0])
+        & (array_df["y"] > 0)
+        & (array_df["y"] < array_shape[1])
+        & (array_df["z"] > 0)
+        & (array_df["z"] < array_shape[2])
+    )
+
+
 @overload
 def gen_features(
     img_path: ...,
@@ -309,7 +323,7 @@ def gen_features(
     img = zoom(img, size)
 
     # Get image samples (sample more closer to target)
-    # Concatenate and retain unique samples and
+    # Concatenate and retain unique samples
     all_samples = (
         pd.concat(
             [
@@ -319,6 +333,7 @@ def gen_features(
         )
         .drop_duplicates(ignore_index=True)
         .sort_values(by=["x", "y", "z"], ignore_index=True)  # Just to match old way
+        .loc[lambda df: is_in_array(df, img.shape), :]
     )
 
     box_averages = gen_box_averages(
