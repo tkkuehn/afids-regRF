@@ -13,7 +13,7 @@ from joblib import dump
 from numpy.typing import NDArray
 from sklearn.ensemble import RandomForestRegressor
 
-from utils import gen_features, get_fid
+from afids_regrf.utils import gen_features, get_fid
 
 
 def train_afid_model(

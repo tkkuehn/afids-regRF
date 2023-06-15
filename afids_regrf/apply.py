@@ -14,7 +14,7 @@ from importlib_resources import files
 from joblib import load
 from numpy.typing import NDArray
 
-from utils import afids_to_fcsv, gen_features, get_fid
+from afids_regrf.utils import afids_to_fcsv, gen_features, get_fid
 
 
 def apply_afid_model(
