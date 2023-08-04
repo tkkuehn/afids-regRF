@@ -11,12 +11,13 @@ afids_regrf_train = "afids_regrf.train:main"
 afids_regrf_apply = "afids_regrf.apply:main"
 
 [tool.poetry.dependencies]
-python = ">3.8.1,<4"
+python = ">3.8.1,<3.12"
 nibabel = "^5.0.1"
 pandas = "^1.5.3"
 scikit-learn = "^1.2.1"
 joblib = "^1.2.0"
 importlib-resources = "^5.12.0"
+snakebids = "^0.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^2.16.2"
@@ -24,6 +25,7 @@ black = "^23.1.0"
 flake8 = "^6.0.0"
 isort = "^5.12.0"
 pyright = "^1.1.294"
+snakefmt = "^0.8.4"
 
 [build-system]
 requires = ["poetry-core"]

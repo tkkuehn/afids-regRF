@@ -144,6 +144,13 @@ def gen_parser() -> ArgumentParser:
             "part of the training Default: 5"
         ),
     )
+    parser.add_argument(
+        "--afid_label",
+        nargs="?",
+        type=int,
+        required=False,
+        help="AFID label (1-32) to train. If omitted, train all AFID models.",
+    )
 
     return parser
 
@@ -152,6 +159,22 @@ def main():
     parser = gen_parser()
     args = parser.parse_args()
 
+    if args.afid_label:
+        model = train_afid_model(
+            afid_num=args.afid_label,
+            subject_paths=args.subject_paths,
+            fcsv_paths=args.fcsv_paths,
+            feature_offsets=np.load(args.feature_offsets_path),
+            padding=args.padding,
+            sampling_rate=args.sampling_rate,
+            size=args.size,
+        )
+        model_fname = (
+            f"afid-{str(args.afid_label).zfill(2)}_desc-rf_"
+            f"sampleRate-iso{args.sampling_rate}vox_model.joblib"
+        )
+        dump(model, Path(args.model_dir_path) / model_fname)
+        return
     train_all_afid_models(
         subject_paths=args.subject_paths,
         fcsv_paths=args.fcsv_paths,
