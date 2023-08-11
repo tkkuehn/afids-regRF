@@ -42,6 +42,7 @@ def gen_parser() -> ArgumentParser:
     parser.add_argument("padding", type=int)
     parser.add_argument("size", type=int)
     parser.add_argument("sampling_rate", type=int)
+    parser.add_argument("feature_offsets")
     parser.add_argument("out_path")
 
     return parser

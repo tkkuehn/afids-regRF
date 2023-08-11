@@ -65,11 +65,11 @@ rule train_model:
         / "resources"
         / "feature_offsets.npz",
     output:
-        model=Path(config["output_dir"]) / "afids-cnn-train" / "padding{padding}size{size}samplingrate{sampling_rate}" / "afid-{afid}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
+        model=Path(config["output_dir"]) / "afids-regrf-train" / "padding{padding}size{size}samplingrate{sampling_rate}" / "afid-{afid}_desc-rf_sampleRate-iso{sampling_rate}vox_model.joblib"
     params:
         num_channels=config["num_channels"],
     resources:
-        out_dir=lambda wildcards: str(Path(config["output_dir"]) / "afids-cnn-train" / f"padding{wildcards.padding}size{wildcards.size}samplingrate{wildcards.sampling_rate}")
+        out_dir=lambda wildcards: str(Path(config["output_dir"]) / "afids-regrf-train" / f"padding{wildcards.padding}size{wildcards.size}samplingrate{wildcards.sampling_rate}")
     shell:
         "afids_regrf_train --subject_paths {input.images} --fcsv_paths {input.fcsvs} "
         "--feature_offsets_path {input.feature_offsets} --model_dir_path {resources.out_dir} "
@@ -88,7 +88,7 @@ rule all:
         ),
     output:
         combined_model=bids(
-            root=str(Path(config["output_dir"]) / "afids-cnn-model"),
+            root=str(Path(config["output_dir"]) / "afids-regrf-model"),
             suffix="model-combined.afidsmodel",
         ),
     params:
@@ -102,5 +102,5 @@ rule all:
         script=str(Path(workflow.basedir) / "scripts" / "assemble_models.py"),
     default_target: True
     shell:
-        "python3 {resources.script} {input.models} {params.radius} "
-        "{output.combined_model}"
+        "python3 {resources.script} {input.models} {params.padding} "
+        "{params.size} {params.sampling_rate} {params.feature_offsets} {output.combined_model}"
