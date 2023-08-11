@@ -14,12 +14,13 @@ def assemble_models(
     size: int,
     sampling_rate: int,
     out_path: PathLike | str,
+    feature_offsets_path: PathLike | str,
 ) -> None:
     config_info = tarfile.TarInfo("config.json")
     config_content = json.dumps(
         {
             "padding": padding,
-            'size': size,
+            "size": size,
             "sampling_rate": sampling_rate,
             "version": "1.0.0",
         }
@@ -32,12 +33,15 @@ def assemble_models(
         )
         for afid_label in range(1, 33):
             tar_file.add(models[afid_label], arcname=f"afid-{afid_label:02}.model")
+        tar_file.add(feature_offsets_path, arcname="feature_offsets.npz")
 
 
 def gen_parser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("models", nargs=32)
-    parser.add_argument("radius", type=int)
+    parser.add_argument("padding", type=int)
+    parser.add_argument("size", type=int)
+    parser.add_argument("sampling_rate", type=int)
     parser.add_argument("out_path")
 
     return parser
@@ -48,8 +52,11 @@ def main() -> None:
 
     assemble_models(
         {idx + 1: model_path for idx, model_path in enumerate(args.models)},
-        args.radius,
+        args.padding,
+        args.size,
+        args.sampling_rate,
         args.out_path,
+        args.feature_offsets,
     )
 
 

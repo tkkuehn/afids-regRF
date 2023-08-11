@@ -77,18 +77,15 @@ parse_args:
   --afids_dir:
     help: 'Path to a BIDS dataset with AFIDs placements corresponding to bids_dir.'
     required: True
-  --frequency:
-    help: 'Augmentation frequency in voxels.'
-    default: 1000
-  --angle_stdev:
-    help: 'Standard deviation of rotation angles applied in augmentation.'
-    default: 30
-  --num_augment:
-    help: 'Number of augmentations to make.'
+  --padding:
+    help: "Number of voxels to add when zero-padding nifti images. Default: 0"
+    default: 0
+  --size:
+    help: "Factor to resample nifti image by. Default: 1"
     default: 1
-  --radius:
-    help: 'Radius of patches to use.'
-    default: 31
+  --sampling_rate:
+    help: "Number of voxels in both directions along each axis to sample as part of the training Default: 5"
+    default: 5
 
 #--- workflow specific configuration -- below is just an example:
 num_channels: 2

@@ -99,6 +99,7 @@ def gen_parser() -> ArgumentParser:
             "Path to subject nifti images. If more than 1 subject, pass paths "
             "as space-separated list."
         ),
+        required=True,
     )
     parser.add_argument(
         "--fcsv_paths",
@@ -108,6 +109,7 @@ def gen_parser() -> ArgumentParser:
             "Path to subject fcsv files. If more than 1 subject, pass paths as "
             "space-separated list."
         ),
+        required=True,
     )
     parser.add_argument(
         "--feature_offsets_path", type=str, help=("Path to featuers_offsets.npz file")
@@ -123,7 +125,7 @@ def gen_parser() -> ArgumentParser:
         type=int,
         default=0,
         required=False,
-        help=("Number of voxels to add when zero-padding nifti images. " "Default: 0"),
+        help=("Number of voxels to add when zero-padding nifti images. Default: 0"),
     )
     parser.add_argument(
         "--size",
@@ -160,11 +162,12 @@ def main():
     args = parser.parse_args()
 
     if args.afid_label:
+        feature_offsets = np.load(args.feature_offsets_path)
         model = train_afid_model(
             afid_num=args.afid_label,
             subject_paths=args.subject_paths,
             fcsv_paths=args.fcsv_paths,
-            feature_offsets=np.load(args.feature_offsets_path),
+            feature_offsets=(feature_offsets["arr_0"], feature_offsets["arr_1"]),
             padding=args.padding,
             sampling_rate=args.sampling_rate,
             size=args.size,
